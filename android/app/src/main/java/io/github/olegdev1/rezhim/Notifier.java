@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.os.Build;
+import android.os.Bundle;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -63,7 +64,12 @@ final class Notifier {
         for (String a : e.actions) {
             b.addAction(new Notification.Action.Builder(icon(c), label(a), openApp(c, a)).build());
         }
-        if (Build.VERSION.SDK_INT >= 36) b.setRequestPromotedOngoing(true);
+        if (Build.VERSION.SDK_INT >= 36) {
+            // Same as Notification.Builder#setRequestPromotedOngoing (Live Updates: status bar chip).
+            Bundle extras = new Bundle();
+            extras.putBoolean("android.requestPromotedOngoing", true);
+            b.addExtras(extras);
+        }
         nm(c).notify(ID_LIVE, b.build());
     }
 
