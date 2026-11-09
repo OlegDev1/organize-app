@@ -108,4 +108,24 @@ Written on 2026-11-09 from the user's own words.
 8. **Look:** dark theme? Any apps he likes the look of?
 
 ## Answers
-(Write his answers here.)
+Given by voice on 2026-11-09. Items marked "default" were unclear or left open; the default was used and told to him.
+
+1. **Step and target:** 1 h per night until 01:00, then 30 min per night until 00:00, then it stays. Tonight 04:00 → 03:00 → 02:00 → 01:00 → 00:30 → 00:00.
+2. **Doses vs step:** "not that critical". The night dose is 1 h before bedtime and moves with it. The day dose is allowed once ≥ 8 h have passed since the actual night dose.
+3. **Sleep length:** 9 h (8.5–9).
+4. **Wake time:** bedtime + 9 h. On university days, wake-up is capped so he is never late: latest wake = «Быть готовым к» − 40 min getting ready − the last positive alarm offset (15 min), so even the last alarm rings before getting ready starts. Being on time beats sleeping enough.
+5. **University:** «Быть готовым к» is almost always 12:10. Getting ready takes 40 min. Days were not named: default Mon–Fri, editable in settings.
+6. **Conflict:** being on time wins (he must never be late).
+7. **Breaking the plan:** unsure. Default: strict. A late night doesn't move the plan. Plus 1 «поблажка» per 7 days: "repeat yesterday's times", no reason asked. A plan restart is hidden in settings.
+8. **Day dose time:** no fixed time. Allowed from night dose + 8 h.
+9. **Night dose "too early":** he didn't understand the question. Default: warn if > 30 min before the planned time, or if it is already taken.
+10. **Logging:** one button per dose (day, night).
+11. **Mac series:** −20, −10, 0, +10, +15 min. Each rings 5 min, then 5 min of silence. After the last one, the 5/5 cycle repeats until «Я встал». Different sounds.
+12. **Phone alarms (morning):** 5 of them: −15, −5, 0, +10, +15.
+13. **Mac wake time:** no link. The Mac computes the same plan itself (same defaults). It also allows a one-off manual change.
+14. **Custom alarms:** on the Mac. On the phone he also wants an alarm before leaving home ("just in case"): on university days the app suggests «собираться» and «выходить через 10 мин».
+15. **Look:** likes D (light by day, dark at night; calm paper + forest green, Inter). Asked for more D-like variants: shown D–H, pick pending.
+16. **Statistics:** default set: bedtime (plan vs actual), sleep length, dose times, night→day gap, streak of nights on plan. He agreed to tap «Ложусь» and «Встал» on the phone.
+17. **Reminders:** none for doses (the countdown is enough). Bedtime: yes, as a phone alarm the app tells him to set.
+18. **Wind-down:** a reminder about 30 min before bedtime (a phone alarm, plus a «Готовься ко сну» state in the app). No checklist.
+19. **Everyday tasks:** no. Focus on doing the core well.
