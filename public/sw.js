@@ -1,4 +1,4 @@
-// Rezhim service worker. The build replaces __VERSION__ and the file list (vite.config.ts).
+// Rezhim service worker. The build stamps the cache version and the file list (vite.config.ts).
 const CACHE = 'rezhim-v4-__VERSION__'
 const FILES = /*FILES*/[]
 

@@ -76,6 +76,8 @@ export interface Row {
   /** Actual time of the logged action, if done. */
   done?: number
   missed?: boolean
+  /** Its moment came and it still waits for him. */
+  pending?: boolean
   tomorrow?: boolean
 }
 
@@ -102,15 +104,27 @@ export function computeToday(plan: Plan, data: Data, now: number): Today {
   const woke = data.sleeps.find((x) => x.night === prev.key && x.wake != null)
   const bedLog = data.sleeps.find((x) => x.night === cycle && x.bed != null)
 
-  const rows: Row[] = [{ id: 'wake0', time: prev.wake, label: 'Подъём', done: woke?.wake }]
+  const morningOpen = !woke && now < Math.min(prev.wake + 2 * HOUR, prev.uni?.getReady ?? Infinity)
+  const rows: Row[] = [
+    { id: 'wake0', time: prev.wake, label: 'Подъём', done: woke?.wake, pending: morningOpen && now >= prev.wake },
+  ]
   if (prev.uni) {
-    rows.push({ id: 'ready', time: prev.uni.getReady, label: 'Собираться' })
-    rows.push({ id: 'readyBy', time: prev.uni.readyBy, label: 'Быть готовым' })
+    const { getReady, readyBy } = prev.uni
+    rows.push({ id: 'ready', time: getReady, label: 'Собираться', pending: now >= getReady && now < readyBy })
+    rows.push({ id: 'readyBy', time: readyBy, label: 'Быть готовым' })
   }
-  rows.push({ id: 'day', time: dayFrom, label: 'Дневная доза', prefix: 'с', done: day?.at, missed: !day && now >= tonight.nightDose })
-  rows.push({ id: 'night', time: tonight.nightDose, label: 'Ночная доза', done: night?.at })
+  rows.push({
+    id: 'day',
+    time: dayFrom,
+    label: 'Дневная доза',
+    prefix: 'с',
+    done: day?.at,
+    missed: !day && now >= tonight.nightDose,
+    pending: !day && now >= dayFrom && now < tonight.nightDose,
+  })
+  rows.push({ id: 'night', time: tonight.nightDose, label: 'Ночная доза', done: night?.at, pending: !night && now >= tonight.nightDose })
   rows.push({ id: 'wind', time: tonight.windDown, label: 'Готовиться ко сну' })
-  rows.push({ id: 'bed', time: tonight.bed, label: 'Отбой', done: bedLog?.bed })
+  rows.push({ id: 'bed', time: tonight.bed, label: 'Отбой', done: bedLog?.bed, pending: !bedLog && now >= tonight.bed })
   rows.push({ id: 'wake1', time: tonight.wake, label: 'Подъём', tomorrow: true })
   rows.sort((a, b) => a.time - b.time)
 
@@ -136,7 +150,7 @@ export function computeToday(plan: Plan, data: Data, now: number): Today {
     const base = { ...action, chip: action.primary ? chipFor(action.primary) : undefined }
 
     // Morning, not up yet (on university days only until getting ready starts).
-    if (!woke && now < Math.min(prev.wake + 2 * HOUR, prev.uni?.getReady ?? Infinity)) {
+    if (morningOpen) {
       const over = now >= prev.wake
       return {
         ...base,
