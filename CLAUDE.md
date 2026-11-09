@@ -5,9 +5,9 @@
 - The UI is in Russian. Code, docs, commits, research and reasoning are in English.
 - Messages to the user are in Russian, short and plain.
 - Sources of truth:
-  - `SPEC.md`: behavior. Read it first.
+  - `REQUIREMENTS.md`: what the user needs. Read it first. How to build it, which screens and the plan of work: you decide.
   - `USER.md`: personal context. The user attaches it in the chat. It is private: never commit it.
-  - If older notes (HANDOFF.md, EDITS.md, Additional_data.md, project files, old chats) disagree with SPEC.md, SPEC.md wins.
+  - If older notes (HANDOFF.md, EDITS.md, Additional_data.md, project files, old chats) disagree with REQUIREMENTS.md, REQUIREMENTS.md wins.
 - Built for one person, not for production. Simplicity and speed come before architecture.
 
 ## Priorities
@@ -22,10 +22,10 @@
   - Many points are fine. Keep each question short and plain.
   - Give options or your default where you can.
   - The user answers by voice in one message, so numbers matter.
-- Don't re-ask what SPEC.md, USER.md or the chat already answers.
+- Don't re-ask what REQUIREMENTS.md, USER.md or the chat already answers.
 - Decide small technical details yourself (file names, helpers, internal structure).
 - After the user answers:
-  - add the decisions to the "Decisions" section of SPEC.md, so the next chat knows them;
+  - write his answers into the "Answers" section of REQUIREMENTS.md, so the next chat knows them;
   - build to the end without stopping for approval, unless you are truly blocked.
 
 ## How to work
@@ -51,7 +51,6 @@
   - if `PROGRESS.md` exists, resume from it.
 - If the user says «стоп»:
   - stop, commit and push;
-  - send a zip without `.git`;
   - send 5 lines: what is done, what is left, where you stopped.
 
 ## Stack
@@ -62,7 +61,6 @@
 - Props: `interface Props { ... }` + `let { a, b }: Props = $props();`.
 - `tsconfig`: `"strict": true`. No `any` (use `unknown` + narrowing).
 - `vite.config.ts`: `base: './'`.
-- Keep it Capacitor-friendly: relative paths, no server dependencies. The user may wrap it later for real notifications, but not now.
 - Run `npx svelte-check` and keep it at 0 errors. Fix errors; don't chase warnings endlessly.
 
 ## Deploy and PWA
@@ -79,7 +77,7 @@
 - Fresh start: no migration of old data.
   - Use a new localStorage key (e.g. `rezhim-v4`). Ignore the old keys and don't delete them.
 - Data stays on the device: localStorage (IndexedDB only if truly needed). No servers, no accounts.
-- The phone and the Mac are not synced. Design for that (see SPEC.md).
+- The phone and the Mac are not synced. Design for that.
 
 ## Checks (one pass, not loops)
 - Tests: tiny or none.
@@ -89,7 +87,7 @@
   - the build passes and `svelte-check` shows 0 errors;
   - the site opens and there are no console errors;
   - look at screenshots of the main screens at 360 px and on a desktop width: is it clear, beautiful, without overflow?
-  - the logic matches SPEC.md.
+  - the logic matches REQUIREMENTS.md.
 - Fix what's wrong, then stop. Don't re-check what already passed. The user tests on the phone and sends fixes.
 
 ## Privacy and medical
