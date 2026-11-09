@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { emptyData, type Data } from '../src/lib/model.ts'
 import { graceInfo, makePlan } from '../src/lib/plan.ts'
 import { seriesAt } from '../src/lib/series.ts'
+import { buildEvents } from '../src/lib/schedule.ts'
 import { computeToday, dayDoseFrom, doseWarning, phoneAlarms } from '../src/lib/today.ts'
 import { at, hm, MIN } from '../src/lib/time.ts'
 
@@ -39,11 +40,15 @@ assert.equal(graceInfo(graced, '2026-11-18', t('2026-11-18', '20:00')).state, 'b
 assert.equal(graceInfo(plan, '2026-11-10', t('2026-11-10', '20:00')).state, 'available')
 assert.equal(graceInfo(plan, '2026-11-10', t('2026-11-11', '03:30')).state, 'blocked') // after bedtime
 
-// Doses: day dose 8 h after the actual night dose; warnings for early or repeated doses.
+// Doses: day dose not before 12:00 and ≥ 8 h after the actual night dose; warnings for early or repeated doses.
 const d2: Data = { ...emptyData(), doses: [{ id: 'n', kind: 'night', at: t('2026-11-10', '03:20'), cycle: '2026-11-09' }] }
-assert.equal(hm(dayDoseFrom(plan, d2, '2026-11-10')), '11:20')
+assert.equal(hm(dayDoseFrom(plan, d2, '2026-11-10')), '12:00')
+const late: Data = { ...emptyData(), doses: [{ id: 'n', kind: 'night', at: t('2026-11-10', '04:40'), cycle: '2026-11-09' }] }
+assert.equal(hm(dayDoseFrom(plan, late, '2026-11-10')), '12:40')
 assert.match(doseWarning(plan, d2, 'day', t('2026-11-10', '10:00')) ?? '', /8 ч/)
-assert.equal(doseWarning(plan, d2, 'day', t('2026-11-10', '11:30')), null)
+assert.match(doseWarning(plan, d2, 'day', t('2026-11-10', '11:30')) ?? '', /не раньше 12:00/)
+assert.equal(doseWarning(plan, d2, 'day', t('2026-11-10', '12:05')), null)
+assert.match(doseWarning(plan, late, 'day', t('2026-11-10', '12:10')) ?? '', /8 ч/)
 assert.match(doseWarning(plan, d2, 'night', t('2026-11-10', '03:40')) ?? '', /уже отмечена/)
 assert.match(doseWarning(plan, data, 'night', t('2026-11-10', '02:00')) ?? '', /раньше/)
 assert.equal(doseWarning(plan, data, 'night', t('2026-11-10', '02:45')), null)
@@ -89,5 +94,14 @@ assert.equal(at_(20).ringing, false)
 assert.equal(at_(25).ringing, true)
 assert.equal(at_(25).sound, 0)
 assert.equal(at_(30).ringing, false)
+
+// Android schedule: tonight's wake series (5 + an hour of loops), reminders, live card.
+const ev = buildEvents(plan, data, t('2026-11-09', '22:00'))
+const wakeAlarms = ev.filter((e) => e.group === 'wake-2026-11-09')
+assert.equal(wakeAlarms.length, 11)
+assert.deepEqual(wakeAlarms.slice(0, 6).map((e) => hm(e.at)), ['11:00', '11:10', '11:15', '11:25', '11:30', '11:40'])
+assert.ok(ev.some((e) => e.kind === 'remind' && hm(e.at) === '03:30'))
+assert.equal(ev.find((e) => e.kind === 'live' && e.at > t('2026-11-09', '22:00'))?.title, 'Отбой в 04:00')
+assert.ok(ev.some((e) => e.group === 'leave-2026-11-09' && hm(e.at) === '12:00'))
 
 console.log('time math: ok')

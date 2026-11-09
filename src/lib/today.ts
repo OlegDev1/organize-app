@@ -1,6 +1,6 @@
 import type { Data, Dose, DoseKind, Sleep } from './model.ts'
 import type { Night, Plan } from './plan.ts'
-import { duration, HOUR, hm, MIN, shiftKey, signed, type DateKey } from './time.ts'
+import { at, duration, HOUR, hm, MIN, shiftKey, signed, type DateKey } from './time.ts'
 
 export const MIN_GAP = 8 * HOUR
 const NIGHT_EARLY = 30 * MIN
@@ -27,11 +27,21 @@ export function nightJustEnded(plan: Plan, now: number): DateKey {
 export const doseOf = (data: Data, cycle: DateKey, kind: DoseKind): Dose | undefined =>
   data.doses.filter((d) => d.cycle === cycle && d.kind === kind).sort((a, b) => a.at - b.at)[0]
 
-/** Day dose of `cycle` is allowed 8 h after the actual night dose before it (or the planned one). */
-export function dayDoseFrom(plan: Plan, data: Data, cycle: DateKey): number {
+/** When the day dose of `cycle` is allowed: not before 12:00 and ≥ 8 h after the night dose (actual, else planned). */
+export function dayDoseRule(plan: Plan, data: Data, cycle: DateKey): { from: number; afterNight: number; earliest: number } {
   const prev = shiftKey(cycle, -1)
   const taken = data.doses.filter((d) => d.cycle === prev && d.kind === 'night').sort((a, b) => b.at - a.at)[0]
-  return (taken ? taken.at : plan.night(prev).nightDose) + MIN_GAP
+  const afterNight = (taken ? taken.at : plan.night(prev).nightDose) + MIN_GAP
+  const earliest = at(cycle, plan.s.dayDoseEarliest).getTime()
+  return { from: Math.max(afterNight, earliest), afterNight, earliest }
+}
+
+export const dayDoseFrom = (plan: Plan, data: Data, cycle: DateKey): number => dayDoseRule(plan, data, cycle).from
+
+/** Why the day dose waits until `from`: the 8 h rule or the earliest time. */
+export function dayDoseReason(plan: Plan, data: Data, cycle: DateKey): string {
+  const r = dayDoseRule(plan, data, cycle)
+  return r.afterNight > r.earliest ? '8 ч после ночной' : `не раньше ${hm(r.earliest)}`
 }
 
 /** Why logging this dose now needs a second tap, or null. */
@@ -40,9 +50,10 @@ export function doseWarning(plan: Plan, data: Data, kind: DoseKind, now: number)
   const taken = doseOf(data, cycle, kind)
   if (kind === 'day') {
     if (taken) return `Дневная доза уже отмечена сегодня в ${hm(taken.at)}.`
-    const from = dayDoseFrom(plan, data, cycle)
-    if (now < from)
-      return `После ночной прошло ${duration(now - (from - MIN_GAP))}. Твоё правило — не меньше 8 ч, то есть с ${hm(from)}.`
+    const r = dayDoseRule(plan, data, cycle)
+    if (now < r.afterNight)
+      return `После ночной прошло ${duration(now - (r.afterNight - MIN_GAP))}. Твоё правило — не меньше 8 ч, то есть с ${hm(r.from)}.`
+    if (now < r.earliest) return `Дневную ты принимаешь не раньше ${hm(r.earliest)}.`
     return null
   }
   if (taken) return `Ночная доза уже отмечена в ${hm(taken.at)}.`
@@ -199,7 +210,7 @@ export function computeToday(plan: Plan, data: Data, now: number): Today {
         target: dayFrom,
         over: false,
         from: dayFrom - MIN_GAP,
-        sub: `Можно с ${hm(dayFrom)}: 8 ч после ночной`,
+        sub: `Можно с ${hm(dayFrom)}: ${dayDoseReason(plan, data, cycle)}`,
         tone: 'calm',
       }
 

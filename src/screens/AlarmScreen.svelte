@@ -7,6 +7,9 @@
   import { preview } from '../lib/sound.ts'
   import { at, dayLabel, hm, keyOf, MIN, parseClock, shiftKey, signed } from '../lib/time.ts'
   import { removeById } from '../lib/actions.ts'
+  import { isNative, native, openSettings, refreshStatus, testAlarm } from '../lib/native.svelte.ts'
+  import { activeCycle } from '../lib/today.ts'
+  import { Check } from '@lucide/svelte'
 
   const w = $derived(macWake(clock.now))
   const bed = $derived(getPlan().night(w.night).bed)
@@ -28,6 +31,22 @@
     db.wakeOverride = { night: w.night, at: at(shiftKey(w.night, 1), m).getTime() }
     editing = false
   }
+
+  // Android app: the phone rings by itself.
+  const phoneWake = $derived(getPlan().night(activeCycle(getPlan(), db, clock.now)).wake)
+  const phoneSeries = $derived([...db.settings.phoneOffsets].sort((a, b) => a - b).map((o) => ({ o, time: phoneWake + o * MIN })))
+  const perms = $derived(
+    native.status
+      ? [
+          { id: 'notifications' as const, label: 'Уведомления', ok: native.status.notifications },
+          { id: 'exact' as const, label: 'Точное время будильников', ok: native.status.exact },
+          { id: 'fullScreen' as const, label: 'Будильник на весь экран', ok: native.status.fullScreen },
+          ...(native.status.sdk >= 36
+            ? [{ id: 'notifications' as const, label: 'Живое уведомление в строке состояния', ok: native.status.promoted }]
+            : []),
+        ]
+      : [],
+  )
 
   // Own alarms.
   let newTime = $state('')
@@ -57,6 +76,35 @@
   }
 </script>
 
+{#if isNative}
+  <section class="card wake">
+    <p class="label">Подъём</p>
+    <p class="time num">{hm(phoneWake)}</p>
+    <p class="sub">Будильники ставятся сами и двигаются вместе с планом.</p>
+    <ul class="series">
+      {#each phoneSeries as a (a.o)}
+        <li><span class="num t">{hm(a.time)}</span><span class="o num">{signed(a.o)}</span><span class="snd">{a.o === 0 ? 'подъём' : ''}</span><span></span></li>
+      {/each}
+    </ul>
+    <p class="sub small">
+      Каждый звонит {db.settings.ringMin} мин, потом {db.settings.pauseMin} мин тишины, у каждого свой звук. После последнего — по
+      кругу ещё час. «Я встал» выключает все и отмечает подъём.
+    </p>
+    <button class="btn ghost" onclick={testAlarm}>Проверить: зазвонит через 10 с</button>
+  </section>
+
+  <h2 class="section">Разрешения</h2>
+  <div class="card perms">
+    {#each perms as p (p.label)}
+      <div class="perm">
+        <span>{p.label}</span>
+        {#if p.ok}<span class="ok"><Check size={18} strokeWidth={2.6} /></span>
+        {:else}<button class="btn primary small" onclick={() => openSettings(p.id)}>Разрешить</button>{/if}
+      </div>
+    {/each}
+    <button class="recheck" onclick={refreshStatus}>Проверить ещё раз</button>
+  </div>
+{:else}
 <section class="card wake">
   <p class="label">Подъём на Маке</p>
   {#if editing}
@@ -107,6 +155,7 @@
   Мак не знает, что ты отмечал на телефоне. Если брал поблажку — повтори её тут во вкладке «Сон» или измени время
   выше.
 </p>
+{/if}
 
 <h2 class="section">Свои будильники</h2>
 <div class="card own">
@@ -131,7 +180,7 @@
       <button class="del" aria-label="Удалить" onclick={() => removeById(db.alarms, a.id)}><Trash2 size={18} /></button>
     </div>
   {/each}
-  <p class="sub small">Звонят, только пока сайт открыт на Маке.</p>
+  <p class="sub small">{isNative ? 'Звонят как будильник: 3 раза по ' + db.settings.ringMin + ' мин.' : 'Звонят, только пока сайт открыт на Маке.'}</p>
 </div>
 
 <style>
@@ -318,6 +367,36 @@
 
   .switch.on i {
     transform: translateX(20px);
+  }
+
+  .perms {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 20px 14px;
+  }
+
+  .perm {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 52px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ok {
+    color: var(--accent);
+    display: grid;
+  }
+
+  .recheck {
+    align-self: flex-start;
+    margin-top: 8px;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 15px;
+    padding: 6px 0;
   }
 
   .del {

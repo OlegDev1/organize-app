@@ -8,6 +8,7 @@
   import { sleepStats } from '../lib/stats.ts'
   import { clockOf, duration, HOUR, hm, MIN, parseKey, shiftKey, weekdayShort } from '../lib/time.ts'
   import { activeCycle, phoneAlarms } from '../lib/today.ts'
+  import { isNative } from '../lib/native.svelte.ts'
 
   const plan = $derived(getPlan())
   const cycle = $derived(activeCycle(plan, db, clock.now))
@@ -45,7 +46,7 @@
   </p>
 </section>
 
-<h2 class="section">Будильники на телефоне</h2>
+<h2 class="section">{isNative ? 'Будильники и напоминания · ставятся сами' : 'Будильники на телефоне'}</h2>
 <PhoneAlarms {alarms} />
 
 <h2 class="section">План</h2>

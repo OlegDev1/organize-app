@@ -3,10 +3,13 @@ import './app.css'
 import { mount } from 'svelte'
 import App from './App.svelte'
 import { db } from './lib/db.svelte.ts'
+import { initNative, isNative } from './lib/native.svelte.ts'
 
 mount(App, { target: document.getElementById('app')! })
+initNative()
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// The Android app ships its files inside the APK: no service worker there.
+if (import.meta.env.PROD && !isNative && 'serviceWorker' in navigator) {
   // Old versions may have used another worker file: drop them, and their caches.
   navigator.serviceWorker.getRegistrations().then((regs) => {
     for (const r of regs) {

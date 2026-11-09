@@ -5,6 +5,7 @@
   import { clockOf, keyOf, parseClock, parseKey, shortDay, signed, parseOffsets } from '../lib/time.ts'
   import { activeCycle } from '../lib/today.ts'
   import { ask, toast, ui } from '../lib/ui.svelte.ts'
+  import { isNative } from '../lib/native.svelte.ts'
 
   const s = $derived(db.settings)
   const weekdays = [1, 2, 3, 4, 5, 6, 0]
@@ -16,6 +17,7 @@
   let phoneText = $state(db.settings.phoneOffsets.map(signed).join(', '))
   let macText = $state(db.settings.macOffsets.map(signed).join(', '))
   let restartText = $state('')
+  let dayEarliestText = $state(clockOf(db.settings.dayDoseEarliest))
 
   function toggleDay(d: number) {
     const ready = parseClock(readyText) ?? 730
@@ -100,7 +102,15 @@
 <div class="card form">
   <label>Дневная доза<input class="field" bind:value={s.dayName} placeholder="Название" /></label>
   <label>Ночная доза<input class="field" bind:value={s.nightName} placeholder="Название" /></label>
-  <p class="hint">Названия хранятся только на этом устройстве.</p>
+  <label
+    >Дневная не раньше
+    <input class="field num" type="time" bind:value={dayEarliestText}
+      onchange={() => {
+        const m = parseClock(dayEarliestText)
+        if (m != null) s.dayDoseEarliest = m
+      }} />
+  </label>
+  <p class="hint">Дневная — не раньше этого времени и не раньше чем через 8 ч после ночной. Названия хранятся только на этом устройстве.</p>
 </div>
 
 <h2 class="section">Сон</h2>
@@ -179,6 +189,15 @@
   {/each}
 </div>
 <p class="hint pad">Авто: светлая днём, тёмная с 20:00 до 08:00 и пока спишь.</p>
+
+{#if !isNative}
+  <h2 class="section">Приложение для Android</h2>
+  <div class="card form">
+    <p class="hint">Настоящие будильники, которые сами двигаются с планом, и живое уведомление «до отбоя». Открой ссылку на телефоне.</p>
+    <a class="btn primary" href="https://github.com/OlegDev1/organize-app/releases/download/android/rezhim.apk">Скачать APK</a>
+    <p class="hint">Данные не переносятся сами: «Сохранить в файл» здесь → «Загрузить из файла» в приложении.</p>
+  </div>
+{/if}
 
 <h2 class="section">Данные</h2>
 <div class="card form">
@@ -289,6 +308,10 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+  }
+
+  a.btn {
+    text-decoration: none;
   }
 
   .file {

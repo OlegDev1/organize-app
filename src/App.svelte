@@ -4,6 +4,7 @@
   import { alarm } from './lib/alarm.svelte.ts'
   import { clock } from './lib/clock.svelte.ts'
   import { db } from './lib/db.svelte.ts'
+  import { setSystemBars } from './lib/native.svelte.ts'
   import { dayLabel } from './lib/time.ts'
   import { openSleep } from './lib/today.ts'
   import { go, ui, type Tab } from './lib/ui.svelte.ts'
@@ -38,6 +39,7 @@
   $effect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#141310' : '#f4f1ea')
+    setSystemBars(dark)
   })
 </script>
 

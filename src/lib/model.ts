@@ -16,6 +16,8 @@ export interface Sleep {
   night: DateKey
   bed?: number
   wake?: number
+  /** Morning answer to «Как спал?»: 1 bad, 2 ok, 3 good. */
+  rating?: 1 | 2 | 3
 }
 
 export interface Note {
@@ -52,6 +54,8 @@ export interface Settings {
   slowStep: number
   sleepMin: number
   doseBefore: number
+  /** The day dose is never before this time (minutes of day). */
+  dayDoseEarliest: number
   windDownBefore: number
   /** «Быть готовым к», minutes of day, by weekday (0 = Sunday); null = no university. */
   readyBy: (number | null)[]
@@ -92,6 +96,7 @@ export const defaultSettings = (): Settings => ({
   slowStep: 30,
   sleepMin: 9 * 60,
   doseBefore: 60,
+  dayDoseEarliest: 12 * 60,
   windDownBefore: 30,
   readyBy: [null, 730, 730, 730, 730, 730, null],
   prepMin: 40,

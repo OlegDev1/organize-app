@@ -74,6 +74,21 @@ export function wakeUp() {
   toast(`Подъём · ${hm(now)}`, () => removeById(db.sleeps, s.id))
 }
 
+/** Wake-up logged by the native alarm («Я встал» on the alarm screen). */
+export function wakeUpAt(at: number, night: string) {
+  const s = db.sleeps.find((x) => x.night === night)
+  if (s?.wake != null) return
+  if (s) s.wake = at
+  else db.sleeps.push({ id: uid(), night, wake: at })
+  toast(`Подъём отмечен · ${hm(at)}`)
+}
+
+export function rateSleep(id: string, rating: 1 | 2 | 3) {
+  const s = db.sleeps.find((x) => x.id === id)
+  if (s) s.rating = rating
+  buzz()
+}
+
 export async function useGrace(night: string) {
   const ok = await ask({
     title: 'Взять поблажку?',

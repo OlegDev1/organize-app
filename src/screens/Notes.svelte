@@ -1,13 +1,17 @@
 <script lang="ts">
-  import { Copy, Trash2 } from '@lucide/svelte'
+  import { ClipboardList, Copy, Trash2 } from '@lucide/svelte'
   import { format } from 'date-fns'
   import { ru } from 'date-fns/locale'
   import { addNote, deleteNote } from '../lib/actions.ts'
-  import { db } from '../lib/db.svelte.ts'
+  import { clock } from '../lib/clock.svelte.ts'
+  import { db, getPlan } from '../lib/db.svelte.ts'
+  import { buildReport, REPORT_DAYS } from '../lib/report.ts'
+  import { activeCycle } from '../lib/today.ts'
   import { hm, keyOf } from '../lib/time.ts'
   import { toast } from '../lib/ui.svelte.ts'
 
   let text = $state('')
+  let reportDays = $state<number>(14)
 
   const groups = $derived.by(() => {
     const sorted = [...db.notes].sort((a, b) => b.at - a.at)
@@ -20,6 +24,20 @@
     if (addNote(text)) text = ''
   }
 
+  async function copy(textToCopy: string, done: string) {
+    try {
+      await navigator.clipboard.writeText(textToCopy)
+      toast(done)
+    } catch {
+      toast('Не получилось скопировать')
+    }
+  }
+
+  function copyReport() {
+    const plan = getPlan()
+    void copy(buildReport(plan, db, activeCycle(plan, db, clock.now), reportDays), 'Отчёт для врача скопирован')
+  }
+
   async function copyAll() {
     const lines = ['Заметки для врача', '']
     for (const g of [...groups].reverse()) {
@@ -27,12 +45,7 @@
       for (const n of [...g].reverse()) lines.push(`${hm(n.at)} — ${n.text}`)
       lines.push('')
     }
-    try {
-      await navigator.clipboard.writeText(lines.join('\n').trim())
-      toast('Все заметки скопированы')
-    } catch {
-      toast('Не получилось скопировать')
-    }
+    await copy(lines.join('\n').trim(), 'Все заметки скопированы')
   }
 </script>
 
@@ -46,6 +59,17 @@
   ></textarea>
   <button class="btn primary" onclick={add} disabled={!text.trim()}>Добавить</button>
   <p class="hint">Дата и время добавятся сами.</p>
+</div>
+
+<h2 class="section">Отчёт для врача</h2>
+<div class="card report">
+  <p class="hint left">Сон, дозы, промежутки, самочувствие по утрам и заметки за период — одним текстом.</p>
+  <div class="seg">
+    {#each REPORT_DAYS as d (d)}
+      <button class:on={reportDays === d} onclick={() => (reportDays = d)}>{d} дней</button>
+    {/each}
+  </div>
+  <button class="btn ghost" onclick={copyReport}><ClipboardList size={20} /> Скопировать отчёт</button>
 </div>
 
 {#if groups.length}
@@ -92,6 +116,36 @@
     font-size: 13px;
     color: var(--muted);
     text-align: center;
+  }
+
+  .report {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .left {
+    text-align: left;
+  }
+
+  .seg {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .seg button {
+    height: 44px;
+    border-radius: 12px;
+    border: 1.5px solid var(--line);
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .seg button.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
   }
 
   .bar {

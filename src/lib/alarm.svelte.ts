@@ -4,6 +4,7 @@ import { seriesAt } from './series.ts'
 import { audioReady, play, stop, unlockAudio } from './sound.ts'
 import { at, keyOf, shiftKey, type DateKey } from './time.ts'
 import { activeCycle } from './today.ts'
+import { isNative } from './native.svelte.ts'
 
 export interface Active {
   kind: 'series' | 'custom'
@@ -58,7 +59,8 @@ function tick() {
       active = { kind: 'series', label: 'Подъём', ringing: st.ringing, sound: st.sound, next: st.next }
   }
 
-  if (!active?.ringing) {
+  // In the Android app own alarms ring natively.
+  if (!active?.ringing && !isNative) {
     for (const a of db.alarms) {
       if (!a.on) continue
       const occ = occurrence(a, now)
