@@ -129,3 +129,10 @@ Given by voice on 2026-11-09. Items marked "default" were unclear or left open; 
 17. **Reminders:** none for doses (the countdown is enough). Bedtime: yes, as a phone alarm the app tells him to set.
 18. **Wind-down:** a reminder about 30 min before bedtime (a phone alarm, plus a «Готовься ко сну» state in the app). No checklist.
 19. **Everyday tasks:** no. Focus on doing the core well.
+
+## Later requests (2026-11-09, 14:53)
+- **Day dose:** he takes it at 12:00 or later. If < 8 h passed since the logged night dose, the dose moves to the nearest time 8 h after it.
+- **README:** a short guide so another agent understands the project and how to work with it fast.
+- **Alarms follow the plan:** when the wake time moves (e.g. 1 h earlier), the main alarm and all the ± alarms move with it.
+- **Android app (Capacitor):** real alarms that work like the phone's clock, and a special sleep notification that stays on screen, inspired by the Dynamic Island.
+- **Own ideas welcome:** add useful features. Added: doctor report (7/14/30 days), «Как спал?» after waking, «Я встал» on the alarm marks the wake-up, buttons on the live notification (Принял ночную / Ложусь / Я встал).

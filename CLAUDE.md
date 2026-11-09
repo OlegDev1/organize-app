@@ -5,6 +5,7 @@
 - The UI is in Russian. Code, docs, commits, research and reasoning are in English.
 - Messages to the user are in Russian, short and plain.
 - Sources of truth:
+  - `README.md`: how the project is built (layout, concepts, deploy, common changes). Read it to find your way fast.
   - `REQUIREMENTS.md`: what the user needs. Read it first. How to build it, which screens and the plan of work: you decide.
   - `USER.md`: personal context. The user attaches it in the chat. It is private: never commit it.
   - If older notes (HANDOFF.md, EDITS.md, Additional_data.md, project files, old chats) disagree with REQUIREMENTS.md, REQUIREMENTS.md wins.
