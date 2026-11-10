@@ -1,26 +1,27 @@
 # Progress
 
-## Done
-- Answers recorded in REQUIREMENTS.md.
-- Svelte 5 + TS + Vite scaffold, PWA shell (manifest, icons, sw.js stamped at build).
-- Core time math in `src/lib/`: plan (steps, graces, university cap), cycles, doses and warnings, home hero, phone alarms, Mac series, stats. Asserts: `npm test`.
-- Screens: Сейчас (hero countdown + one action + timeline), Сон (tonight, phone alarms, plan, поблажка, stats), Дозы (two dose cards, stats, history), Заметки (auto date, copy all), Будильник (Mac series, own alarms, checklist), Настройки (names, sleep, university, alarms, theme, export/import, hidden restart).
-- Mac alarm engine: Web Audio sounds (5), Wake Lock, full-screen overlay; verified with a fake clock (`tests/alarm.mjs`).
-- Screenshots script: `tests/screens.mjs` (needs `vite preview` on :4173).
+**Work branch: `adaptive`** (from `main` on 2026-11-10). Resume here. Merge into `main` only when the checks at the bottom pass.
+Design and reasons: `docs/ANALYSIS.md`. User's answers: `REQUIREMENTS.md` → "Answers (2026-11-10)".
 
-- Day dose: not before 12:00 and ≥ 8 h after the actual night dose (`dayDoseRule`).
-- Android app (Capacitor 8, `android/`): native plugin `RezhimPlugin` with exact alarms (`setAlarmClock`), alarm service + full-screen alarm, reminders, live sleep notification (chronometer, promoted on Android 16), notification actions, reboot rescheduling. JS side: `schedule.ts` + `native.svelte.ts`. CI builds the APK into the `android` release.
-- Doctor report (Notes), «Как спал?» card, README.md for agents.
+## Plan for this branch
+- [x] 0. Docs: answers recorded, `CLAUDE.md` fixed (English chat, phone only, work branch).
+- [ ] 1. `plan.ts`: adaptive plan derived from real bedtimes; remove «поблажка»; asserts.
+- [ ] 2. `today.ts` / `actions.ts`: 8 h dose floor for both doses, "next dose not before", bedtime waits for the dose, late day dose = red, «Лёг» also logs the night dose, bedtime assigned to the right night.
+- [ ] 3. `schedule.ts`: events from the adaptive plan, dose notifications (switch), bedtime reminder every 20 min until «Лёг», guard: no dose event before the floor.
+- [ ] 4. Screens: Sleep (plan list, cost in days), Settings (new fields), texts.
+- [ ] 5. Remove the Mac alarm (screen, engine, sounds test, settings).
+- [ ] 6. After waking without «Лёг»: ask when he went to bed (also counts as the night dose).
+- [ ] 7. Checks: `npm test`, `npm run check`, `npm run build`, screenshots once. Then merge into `main`.
 
-## Next
-- He adds the signing secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`), then re-run the Android workflow. Until then APKs use a throwaway key.
-- Wait for his design pick (D–H shown); swap the palette (see README → Common changes).
-- His fixes after testing the APK on the phone (not tested on a real device yet).
+## Not started (ideas, in order of value)
+- Day-dose deadline in the hero ("take by HH:MM to keep tonight's bedtime"): partly covered by step 2.
+- Log from the notification without opening the app; automatic backup; alarm health banner on the home screen; "took it earlier" buttons; leave-home countdown. See `docs/ANALYSIS.md` section 1.
 
 ## Decisions
-- A "cycle" = the night's evening date D; it runs from 3 h before the planned wake on D to 3 h before the wake on D+1. Doses and sleeps store their cycle when logged.
-- University cap: wake ≤ ready-by − getting ready − the largest positive alarm offset.
-- Day dose allowed from actual night dose + 8 h (planned one if not logged).
-- Palette D (paper + forest green), Inter; light by day, dark 20:00–08:00.
-- Android: one 7-day event list from JS replaces everything on each change; native only executes. Alarm groups per night; «Я встал» dismisses the group and reports the wake-up back.
-- Signing key is never committed (public repo); it comes from GitHub secrets.
+- See "Answers (2026-11-10)". Earlier decisions (cycle, university cap, palette, Android event list, signing) still hold; the old progress is in git history.
+
+## Open questions for the user
+1. Weekends: should nights before free days be allowed 1 h later? What did "wake up within 11 h" mean?
+
+## Before this branch (done earlier)
+- Svelte 5 + TS + Vite app, Capacitor Android shell with native alarms, live notification, reboot rescheduling; screens Now / Sleep / Doses / Notes / Alarm / Settings; doctor report; CI builds the APK. Not yet tested on a real phone. Signing secrets may still be missing (then the APK can't update an installed app).

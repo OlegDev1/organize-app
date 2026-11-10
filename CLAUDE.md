@@ -1,9 +1,9 @@
-# Rezhim: personal PWA for sleep, meds, alarms and doctor notes
+# Rezhim: personal Android app for sleep, meds, alarms and doctor notes
 
 ## What
-- A personal app for one user (Europe/Madrid). Main device: a big Android phone (installed PWA from Chrome). Second: a MacBook (Chrome), used to ring the morning alarms.
+- A personal app for one user (Europe/Madrid). One device: a big Android phone. The app is a Capacitor app (Svelte UI in a native shell, native alarms and notifications). The Mac alarm is dropped (2026-11-10).
 - The UI is in Russian. Code, docs, commits, research and reasoning are in English.
-- Messages to the user are in Russian, short and plain.
+- Messages to the user are in English, short and plain. Only the app's UI text is in Russian.
 - Sources of truth:
   - `README.md`: how the project is built (layout, concepts, deploy, common changes). Read it to find your way fast.
   - `REQUIREMENTS.md`: what the user needs. Read it first. How to build it, which screens and the plan of work: you decide.
@@ -48,7 +48,7 @@
   - Keep the bundle small. No heavy UI kits, no SvelteKit.
 - Save progress as you go:
   - after each meaningful chunk, update `PROGRESS.md` (short: done / next / decisions);
-  - commit and push to `main`;
+  - commit and push to the current work branch (see `PROGRESS.md`); merge into `main` when a chunk is checked and works (a push to `main` deploys the site and builds the APK);
   - if `PROGRESS.md` exists, resume from it.
 - If the user says «стоп»:
   - stop, commit and push;

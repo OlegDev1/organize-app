@@ -136,3 +136,25 @@ Given by voice on 2026-11-09. Items marked "default" were unclear or left open; 
 - **Alarms follow the plan:** when the wake time moves (e.g. 1 h earlier), the main alarm and all the ± alarms move with it.
 - **Android app (Capacitor):** real alarms that work like the phone's clock, and a special sleep notification that stays on screen, inspired by the Dynamic Island.
 - **Own ideas welcome:** add useful features. Added: doctor report (7/14/30 days), «Как спал?» after waking, «Я встал» on the alarm marks the wake-up, buttons on the live notification (Принял ночную / Ложусь / Я встал).
+
+## Answers (2026-11-10): adaptive doses and sleep
+Given by voice to the questions in `docs/ANALYSIS.md`. "Decided" = he was unsure or said "you decide".
+
+1. **Language:** UI in Russian. Everything else (chat, code, docs) in English.
+2. **Platform:** keep Capacitor. Phone only.
+3. **Mac alarm:** not needed. Remove it.
+4. **Plan vs real bedtime:** unsure. He needs a reason to go to bed on time, but the app must stay usable after a late night. Decided: «Лёг» is the real bedtime and a late night moves the plan (it restarts from the real bedtime); the screen shows what it costs in days, without punishing. «Поблажка» is removed (redundant).
+5. **Step:** as fast as possible to about 02:00 (up to 120 min per night), stay there "a couple of days", then slower to 00:00. He asked for a separate module that computes the schedule from his preferences. Decided: 120 min per night down to 02:00, 2 nights at 02:00, then 30 min per night; all in settings.
+6. **Early night:** does not speed the plan up. Never plan earlier than 00:00.
+7. **Tolerance:** 15 min late still counts as on plan.
+8. **Wake-up:** real bedtime + 9 h, the university cap still wins. Nothing bad happens if he doesn't tap «Встал». The weekend idea ("an hour later, up within 11 h") was unclear: open.
+9. **Bedtime in the daytime (e.g. 14:00):** a (very late) bedtime, not a nap.
+10. **Night dose would land after bedtime:** bedtime waits for the dose.
+11. **Dose taken before 8 h passed:** warn strongly, then log.
+12. **Day dose late:** if it is still not taken about 5 h after it became allowed: a few notifications, then a red screen until he takes it.
+13. **Night dose not logged:** he takes it right before sleep, so «Лёг» also counts as the night dose. If he forgot «Лёг», after waking he says when he went to bed, and that counts as the dose too.
+14. **Dose notifications:** yes, with a switch in settings.
+15. **"Took it earlier" buttons:** only if it stays small. Not built yet.
+16. **Time zones:** he doesn't travel. Nothing special.
+17. **Improvements:** all fine except the wake-up proof (no camera permission; skip for now). He also wants other things that help him start and stop on time; the agent decides.
+18. **Bedtime screen:** it must be closable (he may not be at home). Until he taps «Лёг» it comes back every 20 min with a notification sound. It does not ring like an alarm.
