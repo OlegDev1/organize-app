@@ -33,6 +33,12 @@ Design and reasons: `docs/ANALYSIS.md`. User's answers: `REQUIREMENTS.md` → "A
 
 ## Open questions for the user
 1. Weekends: should nights before free days be allowed 1 h later? What did "wake up within 11 h" mean?
+2. The red screen for the day dose starts 5 h after it became allowed, or earlier if waiting longer would already push bedtime (`dayDoseWindow`). Is that right?
+
+## Still to build from his answers (after step 5)
+- "Took it earlier" buttons after logging a dose, only if it stays small (answer 15).
+- The improvements he accepted in `docs/ANALYSIS.md` section 1: log from the notification without opening the app (3), leave-home countdown (4), automatic backup (7), alarm health banner on the home screen (8), days to target + weekly review (9). Not the wake-up proof (10).
+- Anything else that helps him start and stop on time (see the attached `USER.md` → "What this means for the app"); the agent decides.
 
 ## Before this branch (done earlier)
 - Svelte 5 + TS + Vite app, Capacitor Android shell with native alarms, live notification, reboot rescheduling; screens Now / Sleep / Doses / Notes / Alarm / Settings; doctor report; CI builds the APK. Not yet tested on a real phone. Signing secrets may still be missing (then the APK can't update an installed app).
