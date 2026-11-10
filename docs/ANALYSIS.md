@@ -6,7 +6,7 @@ Analysis only: no code was changed. Branch: `analysis`.
 **Status for the next agent**
 - [x] 1. Ten improvements
 - [x] 2. Design: adaptive doses and sleep
-- [ ] 3. Questions for the user
+- [x] 3. Questions for the user (waiting for answers; write them into REQUIREMENTS.md → Answers, then implement section 2)
 
 Complexity: **S** = under an hour, **M** = a few hours, **L** = a day or more (native work can only be built by CI).
 
@@ -88,3 +88,32 @@ Defaults marked **(Q n)** wait for the user's answer in section 3. Don't build t
 - **Use the real wake-up.** After a very late wake-up, warn early that tonight's bedtime is at risk and move the wind-down earlier.
 - **Weekday awareness.** Before a university morning, the countdown shows the sleep he will actually get ("in bed now = 6 h 40 min of sleep").
 - **Sleep rating feedback.** Several "bad" mornings in a row → suggest holding the step and add a line to the doctor report.
+
+## 3. Questions for the user
+
+Answer by number. "Default" is what gets built if you say nothing.
+
+**Project**
+1. **Language.** `CLAUDE.md` says the UI and messages to you are in Russian; `USER.md` says everything is in English, UI text too. Switch the UI to English? Default: yes, and fix `CLAUDE.md`.
+2. **"Native, not a PWA".** The app is a Capacitor app: web UI inside a native shell, with native alarms and notifications. Is that fine, or do you want a full Kotlin rewrite? Default: keep Capacitor.
+3. **Mac alarm.** Still needed now that the phone rings by itself? The Mac can't see your real bedtime, so its wake time will be wrong after a late night. Default: keep it, but only as a manual alarm (you type the time).
+
+**Sleep**
+4. **Strict plan vs real bedtime.** Earlier you chose "a late night doesn't move the plan" plus one «поблажка» a week. The new button moves the plan to your real bedtime. Does it replace the old rule, and can «поблажка» go? Default: yes to both.
+5. **Step back to 00:00.** a) 60 min per night down to 01:00, then 30 min (as now); b) 90; c) 120. Default: a.
+6. **Early night.** If you go to bed earlier than planned, should the plan speed up? Default: no, the next night follows the plan.
+7. **Tolerance.** How many minutes late still counts as "on plan"? Default: 15.
+14. **Wake-up after a late bedtime.** Real bedtime + 9 h, and on university days the "never late" cap still wins. OK? Is there a latest wake time on free days? Default: yes; no limit.
+15. **Daytime sleep.** If you go to bed at, say, 14:00 after a night without sleep: is it that night's (very late) bedtime, or a nap that doesn't touch the plan? Default: a bedtime.
+
+**Doses** (the app follows your rules; check 8–10 with your doctor)
+8. **Night dose would land after bedtime** (the day dose was late). a) Bedtime waits for the dose: take it, then bed; b) bedtime = dose + 1 h; c) another rule. Default: a.
+9. **A dose really taken before 8 h passed.** Let you log it after a strong warning, or block the button? Default: warn, then log, because the log must be true.
+10. **Missed day dose.** Is there a time after which you skip it instead of taking it late? Default: no cut-off; the app only shows where the night dose moves to.
+11. **Night dose not logged.** In the morning, ask once "taken at bedtime / not taken"? Default: yes. Until you answer, the planned time is assumed.
+12. **Dose notifications.** Earlier you said "no reminders, the countdown is enough". Do you now want one notification when a dose becomes allowed? Default: yes, one, never before the 8 h mark.
+13. **"Took it earlier" buttons** (−5 / −15 / −30 / −60 min) right after logging. OK, although you asked for no manual time entry? Default: yes.
+
+**Other**
+16. **Time zones.** Do you travel across time zones with this phone? Default: no special handling, only a "Time zone changed, open the app" notification.
+17. **Improvements.** Which of the ten in section 1 do you want, and in what order? Default: 2, 1, 6, 7 after the adaptive feature.
