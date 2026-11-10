@@ -158,3 +158,6 @@ Given by voice to the questions in `docs/ANALYSIS.md`. "Decided" = he was unsure
 16. **Time zones:** he doesn't travel. Nothing special.
 17. **Improvements:** all fine except the wake-up proof (no camera permission; skip for now). He also wants other things that help him start and stop on time; the agent decides.
 18. **Bedtime screen:** it must be closable (he may not be at home). Until he taps «Лёг» it comes back every 20 min with a notification sound. It does not ring like an alarm.
+19. **Weekends (2026-11-10, later):** before free days he may go to bed 1 h later, 1.5 h, at most 2 h, without it counting as late. Not built yet.
+20. **Wake-up check-in:** he should tap «Встал» within about 11 h after «Лёг»; if not, remind him gently, no penalty. Not built yet.
+21. **Day dose red screen:** about 5 h after it became allowed is right.

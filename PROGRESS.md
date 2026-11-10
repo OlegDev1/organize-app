@@ -32,10 +32,11 @@ Design and reasons: `docs/ANALYSIS.md`. User's answers: `REQUIREMENTS.md` → "A
 - See "Answers (2026-11-10)". Earlier decisions (cycle, university cap, palette, Android event list, signing) still hold; the old progress is in git history.
 
 ## Open questions for the user
-1. Weekends: should nights before free days be allowed 1 h later? What did "wake up within 11 h" mean?
-2. The red screen for the day dose starts 5 h after it became allowed, or earlier if waiting longer would already push bedtime (`dayDoseWindow`). Is that right?
+- None. Latest answers: `REQUIREMENTS.md` answers 19–21.
 
 ## Still to build from his answers (after step 5)
+- Weekend allowance (answer 19): nights before free days may be up to 1–2 h later than plan without restarting it (a setting, default 60 min).
+- Wake-up check-in (answer 20): a gentle reminder if «Встал» is not tapped 11 h after «Лёг».
 - "Took it earlier" buttons after logging a dose, only if it stays small (answer 15).
 - The improvements he accepted in `docs/ANALYSIS.md` section 1: log from the notification without opening the app (3), leave-home countdown (4), automatic backup (7), alarm health banner on the home screen (8), days to target + weekly review (9). Not the wake-up proof (10).
 - Anything else that helps him start and stop on time (see the attached `USER.md` → "What this means for the app"); the agent decides.
