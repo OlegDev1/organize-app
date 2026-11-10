@@ -1,7 +1,7 @@
 import { db, getPlan, uid } from './db.svelte.ts'
 import type { Dose, DoseKind } from './model.ts'
 import { activeCycle, bedNight, doseFloor, doseOf, doseWarning, MIN_GAP, nightJustEnded, openSleep } from './today.ts'
-import { duration, hm } from './time.ts'
+import { at, duration, HOUR, hm, shiftKey } from './time.ts'
 import { ask, buzz, toast } from './ui.svelte.ts'
 
 const doseName = (kind: DoseKind) => (kind === 'day' ? 'Дневная доза' : 'Ночная доза')
@@ -112,6 +112,25 @@ export function wakeUpAt(at: number, night: string) {
   if (s) s.wake = at
   else db.sleeps.push({ id: uid(), night, wake: at })
   toast(`Подъём отмечен · ${hm(at)}`)
+}
+
+/**
+ * He forgot «Лёг»: after waking he says when he went to bed (clock time, minutes of day).
+ * He takes the night dose right before sleep, so it counts as that dose too.
+ */
+export function setBedtime(id: string, minutes: number) {
+  const s = db.sleeps.find((x) => x.id === id)
+  if (!s || s.wake == null) return
+  let bed = at(shiftKey(s.night, 1), minutes).getTime()
+  if (bed >= s.wake) bed -= 24 * HOUR
+  s.bed = bed
+  const dose: Dose | undefined = doseOf(db, s.night, 'night') ? undefined : { id: uid(), kind: 'night', at: bed, cycle: s.night }
+  if (dose) db.doses.push(dose)
+  buzz()
+  toast(`Отбой · ${hm(bed)}${dose ? ' · ночная отмечена' : ''}`, () => {
+    s.bed = undefined
+    if (dose) removeById(db.doses, dose.id)
+  })
 }
 
 export function rateSleep(id: string, rating: 1 | 2 | 3) {

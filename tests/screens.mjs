@@ -34,7 +34,6 @@ function seed() {
     doses,
     sleeps,
     notes,
-    graces: [],
     alarms: [{ id: 'x', min: 18 * 60 + 30, label: 'Выйти в зал', daily: true, on: true, date: '2026-11-09' }],
     armed: null,
     wakeOverride: null,
@@ -69,6 +68,9 @@ const nov = (d, h, m) => new Date(local(2026, 11, d, h, m))
 
 await shot('now-day', { time: nov(9, 14, 10), tab: 'now' })
 await shot('now-night', { time: nov(10, 3, 10), tab: 'now' })
+// Stop points: up after bedtime, and the day dose long overdue.
+await shot('now-late', { time: nov(10, 5, 10), tab: 'now' })
+await shot('now-dose-late', { time: nov(9, 17, 40), tab: 'now' })
 await shot('now-uni', { time: nov(10, 11, 40), tab: 'now' })
 await shot('sleep', { time: nov(9, 14, 10), tab: 'sleep' })
 await shot('doses', { time: nov(9, 14, 10), tab: 'doses' })

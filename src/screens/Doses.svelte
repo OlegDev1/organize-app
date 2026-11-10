@@ -7,13 +7,19 @@
   import type { DoseKind } from '../lib/model.ts'
   import { doseStats } from '../lib/stats.ts'
   import { countdown, dayLabel, duration, hm, HOUR, MIN, parseKey, shiftKey } from '../lib/time.ts'
-  import { activeCycle, dayDoseFrom, doseOf, MIN_GAP } from '../lib/today.ts'
+  import { activeCycle, dayDoseFrom, doseFloor, doseOf, MIN_GAP, nightFor } from '../lib/today.ts'
 
   const plan = $derived(getPlan())
   const now = $derived(clock.now)
   const cycle = $derived(activeCycle(plan, db, now))
   const dayFrom = $derived(dayDoseFrom(plan, db, cycle))
-  const nightAt = $derived(plan.night(cycle).nightDose)
+  const nightAt = $derived(nightFor(plan, db, cycle).nightDose)
+  const pushed = $derived(nightAt > plan.night(cycle).nightDose)
+  // The hard rule, always in sight while it holds.
+  const floor = $derived.by(() => {
+    const f = doseFloor(db)
+    return f != null && now < f ? f : null
+  })
   const taken = $derived({ day: doseOf(db, cycle, 'day'), night: doseOf(db, cycle, 'night') })
   const stats = $derived(doseStats(db, cycle))
 
@@ -24,7 +30,8 @@
       if (now < dayFrom) return { text: `Можно через ${countdown(dayFrom - now)} · с ${hm(dayFrom)}`, ready: false }
       return { text: `Можно: прошло ${duration(now - dayFrom + MIN_GAP)} после ночной`, ready: true }
     }
-    if (now < nightAt) return { text: `По плану в ${hm(nightAt)} · через ${countdown(nightAt - now)}`, ready: false }
+    if (now < nightAt)
+      return { text: `${pushed ? 'Не раньше' : 'По плану в'} ${hm(nightAt)} · через ${countdown(nightAt - now)}`, ready: false }
     return { text: `Пора: по плану была в ${hm(nightAt)}`, ready: true }
   }
 
@@ -49,6 +56,9 @@
 </script>
 
 <div class="stack">
+  {#if floor}
+    <p class="floor num">Следующая доза не раньше <b>{hm(floor)}</b> · через {countdown(floor - now)}</p>
+  {/if}
   {#each cards as c (c.kind)}
     {@const st = status(c.kind)}
     {@const name = c.kind === 'day' ? db.settings.dayName : db.settings.nightName}
@@ -107,6 +117,15 @@
 {/if}
 
 <style>
+  .floor {
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
   .dose {
     display: flex;
     flex-direction: column;
