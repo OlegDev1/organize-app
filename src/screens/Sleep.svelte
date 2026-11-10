@@ -1,30 +1,26 @@
 <script lang="ts">
   import PhoneAlarms from '../components/PhoneAlarms.svelte'
   import SleepChart from '../components/SleepChart.svelte'
-  import { useGrace } from '../lib/actions.ts'
   import { clock } from '../lib/clock.svelte.ts'
   import { db, getPlan } from '../lib/db.svelte.ts'
-  import { graceInfo } from '../lib/plan.ts'
   import { sleepStats } from '../lib/stats.ts'
   import { clockOf, duration, HOUR, hm, MIN, parseKey, shiftKey, weekdayShort } from '../lib/time.ts'
-  import { activeCycle, phoneAlarms } from '../lib/today.ts'
+  import { activeCycle, lateCost, nightFor, phoneAlarms } from '../lib/today.ts'
   import { isNative } from '../lib/native.svelte.ts'
 
   const plan = $derived(getPlan())
   const cycle = $derived(activeCycle(plan, db, clock.now))
-  const tonight = $derived(plan.night(cycle))
+  const tonight = $derived(nightFor(plan, db, cycle))
+  const pushed = $derived(tonight.bed > plan.night(cycle).bed)
   const alarms = $derived(phoneAlarms(plan, cycle))
-  const grace = $derived(graceInfo(plan, cycle, clock.now))
   const stats = $derived(sleepStats(plan, db, shiftKey(cycle, -1)))
 
-  const upcoming = $derived(Array.from({ length: 7 }, (_, i) => plan.night(shiftKey(cycle, i))))
-  const targetFrom = $derived.by(() => {
-    for (let i = 0; i < 30; i++) {
-      const n = plan.night(shiftKey(cycle, i))
-      if (plan.bedMinutes(n.index) === plan.s.targetBed) return n
-    }
-    return undefined
-  })
+  const upcoming = $derived(Array.from({ length: 8 }, (_, i) => plan.night(shiftKey(cycle, i))))
+  const targetFrom = $derived(plan.targetNight(cycle))
+  // What staying up costs right now, once bedtime has passed and he is not in bed.
+  const cost = $derived(
+    tonight.realBed == null && clock.now > tonight.bed + plan.s.bedTolerance * MIN ? lateCost(plan, db, cycle, clock.now) : 0,
+  )
 
   const dayName = (key: string) => {
     const d = parseKey(key)
@@ -33,7 +29,7 @@
 </script>
 
 <section class="card tonight">
-  <p class="title">Сегодня ночью{tonight.grace ? ' · поблажка' : ''}</p>
+  <p class="title">Сегодня ночью</p>
   <div class="grid">
     <div><span>Ночная доза</span><b class="num">{hm(tonight.nightDose)}</b></div>
     <div><span>Готовиться</span><b class="num">{hm(tonight.windDown)}</b></div>
@@ -41,7 +37,7 @@
     <div class="main"><span>Подъём</span><b class="num">{hm(tonight.wake)}</b></div>
   </div>
   <p class="note">
-    Сон {duration(tonight.wake - tonight.bed)}{#if tonight.uni}.
+    {#if pushed}Отбой ждёт ночную дозу: 8 ч после дневной. {/if}Сон {duration(tonight.wake - (tonight.realBed ?? tonight.bed))}{#if tonight.uni}.
       Учёба: собираться в {hm(tonight.uni.getReady)}, готов к {hm(tonight.uni.readyBy)}{/if}
   </p>
 </section>
@@ -56,27 +52,14 @@
       <span class="day">{i === 0 ? 'сегодня' : dayName(n.key)}</span>
       <span class="num bed">{hm(n.bed)}</span>
       <span class="num wake">→ {hm(n.wake)}</span>
-      {#if n.grace}<span class="tag">поблажка</span>{/if}
+      {#if n.late && n.realBed != null}<span class="tag">лёг в {hm(n.realBed)}</span>{/if}
     </div>
   {/each}
   <p class="note">
-    {#if targetFrom}Цель {clockOf(plan.s.targetBed)}{targetFrom.key === cycle ? ' уже сегодня' : ` — с ${dayName(targetFrom.key)}`}.{/if}
-    Поздно лёг — план не сдвигается, встаёшь по плану.
+    {#if targetFrom}Цель {clockOf(plan.s.targetBed)}{targetFrom === cycle ? ' уже сегодня' : ` — с ${dayName(targetFrom)}`}.{/if}
+    {#if cost}Ляжешь сейчас — цель отодвинется на {cost} дн.
+    {:else}План идёт от того, когда ты реально лёг: позже плана больше чем на {plan.s.bedTolerance} мин — следующие ночи считаются заново.{/if}
   </p>
-</div>
-
-<div class="card grace">
-  <div>
-    <p class="title">Поблажка</p>
-    <p class="note">
-      {#if grace.state === 'used'}Взята сегодня: повторяются вчерашние времена.
-      {:else if grace.state === 'available'}Раз в 7 дней: повторить вчерашние времена.
-      {:else}{grace.reason}{/if}
-    </p>
-  </div>
-  {#if grace.state === 'available'}
-    <button class="btn ghost small" onclick={() => useGrace(cycle)}>Взять</button>
-  {/if}
 </div>
 
 <h2 class="section">Статистика сна</h2>
@@ -176,18 +159,6 @@
 
   .plan .note {
     margin-top: 12px;
-  }
-
-  .grace {
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .grace .btn {
-    flex: none;
   }
 
   .chart {

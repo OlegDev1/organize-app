@@ -48,14 +48,23 @@ export interface Settings {
   /** Bedtimes are minutes after midnight of the evening date: 04:00 next day = 1680. */
   startBed: number
   targetBed: number
-  /** Step while bedtime is later than `fastUntil`, then `slowStep`. */
+  /** Step per night while bedtime is later than `fastUntil`; then `holdNights` nights there; then `slowStep`. */
   fastStep: number
   fastUntil: number
+  holdNights: number
   slowStep: number
+  /** A real bedtime up to this many minutes late still counts as on plan. */
+  bedTolerance: number
   sleepMin: number
   doseBefore: number
   /** The day dose is never before this time (minutes of day). */
   dayDoseEarliest: number
+  /** Minutes after the day dose became allowed when the app starts to insist. */
+  doseLateMin: number
+  /** Notifications when a dose becomes allowed or is overdue. */
+  doseNotify: boolean
+  /** While he is up after bedtime, remind every this many minutes. */
+  bedNagMin: number
   windDownBefore: number
   /** «Быть готовым к», minutes of day, by weekday (0 = Sunday); null = no university. */
   readyBy: (number | null)[]
@@ -74,8 +83,6 @@ export interface Data {
   doses: Dose[]
   sleeps: Sleep[]
   notes: Note[]
-  /** Nights where «поблажка» repeated yesterday's times. */
-  graces: DateKey[]
   alarms: CustomAlarm[]
   /** Mac wake-up series, when started. */
   armed: { wake: number } | null
@@ -91,12 +98,17 @@ export const defaultSettings = (): Settings => ({
   planStart: '2026-11-09',
   startBed: 28 * 60,
   targetBed: 24 * 60,
-  fastStep: 60,
-  fastUntil: 25 * 60,
+  fastStep: 120,
+  fastUntil: 26 * 60,
+  holdNights: 2,
   slowStep: 30,
+  bedTolerance: 15,
   sleepMin: 9 * 60,
   doseBefore: 60,
   dayDoseEarliest: 12 * 60,
+  doseLateMin: 5 * 60,
+  doseNotify: true,
+  bedNagMin: 20,
   windDownBefore: 30,
   readyBy: [null, 730, 730, 730, 730, 730, null],
   prepMin: 40,
@@ -114,7 +126,6 @@ export const emptyData = (): Data => ({
   doses: [],
   sleeps: [],
   notes: [],
-  graces: [],
   alarms: [],
   armed: null,
   wakeOverride: null,

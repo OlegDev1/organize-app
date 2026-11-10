@@ -9,7 +9,10 @@ function isData(x: unknown): x is Partial<Data> & { v: 4 } {
 
 /** Fills fields added in later versions with defaults. */
 export function normalize(x: Partial<Data>): Data {
-  return { ...emptyData(), ...x, settings: { ...defaultSettings(), ...x.settings } }
+  const d = defaultSettings()
+  // Data saved before the adaptive plan: take its new step rules (the old ones were 60 min down to 01:00).
+  const steps = x.settings && !('holdNights' in x.settings) ? { fastStep: d.fastStep, fastUntil: d.fastUntil } : {}
+  return { ...emptyData(), ...x, settings: { ...d, ...x.settings, ...steps } }
 }
 
 export function parseData(text: string): Data | null {
@@ -37,7 +40,7 @@ $effect.root(() => {
   })
 })
 
-const plan: Plan = $derived(makePlan($state.snapshot(db.settings), $state.snapshot(db.graces)))
+const plan: Plan = $derived(makePlan($state.snapshot(db.settings), $state.snapshot(db.sleeps)))
 
 export const getPlan = (): Plan => plan
 

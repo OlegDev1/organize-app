@@ -11,6 +11,12 @@
 
   const today = $derived(computeToday(getPlan(), db, clock.now))
   const alarms = $derived(phoneAlarms(getPlan(), today.cycle))
+
+  // Stop point: the whole screen turns red, not only the card.
+  $effect(() => {
+    document.documentElement.classList.toggle('alert', today.hero.alert === true)
+    return () => document.documentElement.classList.remove('alert')
+  })
   // In the Android app alarms move by themselves; on the web he moves the phone's alarms by hand.
   const changed = $derived(!isNative && alarms.some((a) => a.was != null) && db.alarmsAck !== today.cycle)
 

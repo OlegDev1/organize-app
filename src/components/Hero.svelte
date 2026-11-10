@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goToBed, takeDose, wakeUp } from '../lib/actions.ts'
+  import { goToBed, notAsleep, takeDose, wakeUp } from '../lib/actions.ts'
   import { db } from '../lib/db.svelte.ts'
   import { countdown } from '../lib/time.ts'
   import type { Action, Hero } from '../lib/today.ts'
@@ -19,11 +19,12 @@
     wake: { label: 'Я встал', run: wakeUp },
     day: { label: 'Принял дневную', run: () => takeDose('day'), name: () => db.settings.dayName },
     night: { label: 'Принял ночную', run: () => takeDose('night'), name: () => db.settings.nightName },
-    bed: { label: 'Ложусь', run: goToBed },
+    bed: { label: 'Лёг', run: goToBed },
+    notAsleep: { label: 'Ещё не сплю', run: notAsleep },
   }
 </script>
 
-<section class="hero card tone-{hero.tone}">
+<section class="hero card tone-{hero.tone}" class:alert={hero.alert}>
   {#if hero.chip}<p class="chip">{hero.chip}</p>{/if}
   <p class="label">{hero.label}</p>
   <p class="digits num">{hero.over ? '+' : ''}{countdown(hero.over ? now - hero.target : left)}</p>
@@ -141,6 +142,36 @@
   }
   .tone-late .btn.primary {
     background: var(--late);
+    color: #fff;
+  }
+
+  /* Stop point (up after bedtime, day dose long overdue): the card itself is red. */
+  .alert {
+    background: var(--late);
+    border-color: transparent;
+    color: #fff;
+  }
+  .alert .label,
+  .alert .sub,
+  .alert .digits {
+    color: #fff;
+  }
+  .alert .chip {
+    background: rgb(255 255 255 / 0.18);
+    color: #fff;
+  }
+  .alert .bar {
+    background: rgb(255 255 255 / 0.25);
+  }
+  .alert .bar i {
+    background: #fff;
+  }
+  .alert .btn.primary {
+    background: #fff;
+    color: var(--late);
+  }
+  .alert .btn.ghost {
+    border-color: rgb(255 255 255 / 0.5);
     color: #fff;
   }
 

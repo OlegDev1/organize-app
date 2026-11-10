@@ -1,7 +1,7 @@
 import { db, getPlan, uid } from './db.svelte.ts'
-import type { DoseKind } from './model.ts'
-import { activeCycle, doseWarning, nightJustEnded, openSleep } from './today.ts'
-import { hm } from './time.ts'
+import type { Dose, DoseKind } from './model.ts'
+import { activeCycle, bedNight, doseFloor, doseOf, doseWarning, MIN_GAP, nightJustEnded, openSleep } from './today.ts'
+import { duration, hm } from './time.ts'
 import { ask, buzz, toast } from './ui.svelte.ts'
 
 const doseName = (kind: DoseKind) => (kind === 'day' ? 'Дневная доза' : 'Ночная доза')
@@ -20,10 +20,13 @@ export async function takeDose(kind: DoseKind) {
   )
     return
   const now = Date.now()
-  const dose = { id: uid(), kind, at: now, cycle: activeCycle(getPlan(), db, now) }
+  const plan = getPlan()
+  // A night dose belongs to the night he is about to sleep, also when that is already "tomorrow" by the clock.
+  const cycle = kind === 'night' ? bedNight(plan, db, now) : activeCycle(plan, db, now)
+  const dose: Dose = { id: uid(), kind, at: now, cycle }
   db.doses.push(dose)
   buzz()
-  toast(`${doseName(kind)} · ${hm(now)}`, () => removeById(db.doses, dose.id))
+  toast(`${doseName(kind)} · ${hm(now)}. Следующая не раньше ${hm(now + MIN_GAP)}`, () => removeById(db.doses, dose.id))
 }
 
 export async function deleteDose(id: string) {
@@ -33,23 +36,51 @@ export async function deleteDose(id: string) {
     removeById(db.doses, id)
 }
 
-export function goToBed() {
+/** «Лёг»: the real bedtime. He takes the night dose right before sleep, so it is logged too if it wasn't. */
+export async function goToBed() {
+  if (openSleep(db, Date.now())) return
+  const night = bedNight(getPlan(), db, Date.now())
+  let withDose = !doseOf(db, night, 'night')
+  const floor = doseFloor(db)
+  if (withDose && floor != null && Date.now() < floor)
+    withDose = await ask({
+      title: 'Ночная доза',
+      text: `С прошлой дозы прошло ${duration(Date.now() - (floor - MIN_GAP))}. По твоему правилу ночную можно с ${hm(floor)}. Отметить её сейчас?`,
+      ok: 'Отметить ночную',
+      cancel: 'Только отбой',
+      danger: true,
+    })
+
   const now = Date.now()
-  if (openSleep(db, now)) return
-  const night = activeCycle(getPlan(), db, now)
+  const dose: Dose | undefined = withDose ? { id: uid(), kind: 'night', at: now, cycle: night } : undefined
+  if (dose) db.doses.push(dose)
   const existing = db.sleeps.find((x) => x.night === night)
+  let undo: () => void
   if (existing) {
-    // Tapped «Встал» by mistake earlier tonight, or logs again: keep one record per night.
+    // Tapped «Встал» by mistake earlier tonight, or got up and lies down again: one record per night.
     const before = { bed: existing.bed, wake: existing.wake }
     existing.bed = now
     existing.wake = undefined
-    toast(`Отбой · ${hm(now)}`, () => Object.assign(existing, before))
+    undo = () => Object.assign(existing, before)
   } else {
     const s = { id: uid(), night, bed: now }
     db.sleeps.push(s)
-    toast(`Отбой · ${hm(now)}. Спокойной ночи`, () => removeById(db.sleeps, s.id))
+    undo = () => removeById(db.sleeps, s.id)
   }
   buzz()
+  toast(`Отбой · ${hm(now)}${dose ? ' · ночная отмечена' : ''}. Подъём в ${hm(getPlan().night(night).wake)}`, () => {
+    undo()
+    if (dose) removeById(db.doses, dose.id)
+  })
+}
+
+/** He got up again shortly after «Лёг»: forget that bedtime. The dose logged with it stays (delete it in «Дозы» if needed). */
+export function notAsleep() {
+  const open = openSleep(db, Date.now())
+  if (!open) return
+  const copy = { ...open }
+  removeById(db.sleeps, open.id)
+  toast('Отбой отменён', () => db.sleeps.push(copy))
 }
 
 export function wakeUp() {
@@ -87,16 +118,6 @@ export function rateSleep(id: string, rating: 1 | 2 | 3) {
   const s = db.sleeps.find((x) => x.id === id)
   if (s) s.rating = rating
   buzz()
-}
-
-export async function useGrace(night: string) {
-  const ok = await ask({
-    title: 'Взять поблажку?',
-    text: 'Сегодня повторяются вчерашние времена, план сдвигается на день. Следующая поблажка — через 7 дней.',
-    ok: 'Взять поблажку',
-    cancel: 'Держать план',
-  })
-  if (ok && !db.graces.includes(night)) db.graces.push(night)
 }
 
 export function addNote(text: string): boolean {

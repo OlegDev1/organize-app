@@ -54,6 +54,14 @@ body {
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Stop point on the home screen: he is up after bedtime or a dose is long overdue. */
+html.alert,
+html.alert body {
+  background: var(--late-soft);
+  transition: background 0.4s;
+}
+
+
 button,
 input,
 textarea,

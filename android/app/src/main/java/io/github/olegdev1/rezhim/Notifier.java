@@ -77,8 +77,9 @@ final class Notifier {
         nm(c).cancel(ID_LIVE);
     }
 
+    /** One notification with a sound; each new one replaces the last and sounds again. Buttons log in one tap. */
     static void remind(Context c, Store.Ev e) {
-        Notification n = new Notification.Builder(c, CH_REMIND)
+        Notification.Builder b = new Notification.Builder(c, CH_REMIND)
                 .setSmallIcon(R.drawable.ic_stat_moon)
                 .setColor(ACCENT)
                 .setContentTitle(e.title)
@@ -86,9 +87,11 @@ final class Notifier {
                 .setAutoCancel(true)
                 .setCategory(Notification.CATEGORY_REMINDER)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setContentIntent(openApp(c, null))
-                .build();
-        nm(c).notify(ID_REMIND, n);
+                .setContentIntent(openApp(c, null));
+        for (String a : e.actions) {
+            b.addAction(new Notification.Action.Builder(icon(c), label(a), openApp(c, a)).build());
+        }
+        nm(c).notify(ID_REMIND, b.build());
     }
 
     /** Foreground notification of a ringing alarm; opens the full-screen alarm over the lock screen. */
@@ -166,7 +169,7 @@ final class Notifier {
             case "night":
                 return "Принял ночную";
             case "bed":
-                return "Ложусь";
+                return "Лёг";
             case "wake":
                 return "Я встал";
             default:

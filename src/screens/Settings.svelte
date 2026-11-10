@@ -18,6 +18,7 @@
   let macText = $state(db.settings.macOffsets.map(signed).join(', '))
   let restartText = $state('')
   let dayEarliestText = $state(clockOf(db.settings.dayDoseEarliest))
+  let fastUntilText = $state(clockOf(db.settings.fastUntil))
 
   function toggleDay(d: number) {
     const ready = parseClock(readyText) ?? 730
@@ -110,7 +111,7 @@
         if (m != null) s.dayDoseEarliest = m
       }} />
   </label>
-  <p class="hint">Дневная — не раньше этого времени и не раньше чем через 8 ч после ночной. Названия хранятся только на этом устройстве.</p>
+  <p class="hint">Дневная — не раньше этого времени. Между любыми двумя дозами — не меньше 8 ч. Названия хранятся только на этом устройстве.</p>
 </div>
 
 <h2 class="section">Сон</h2>
@@ -134,10 +135,63 @@
     </label>
   </div>
   <label>Цель отбоя<input class="field num" type="time" bind:value={targetText} onchange={saveTarget} /></label>
+  <div class="two">
+    <label
+      >Быстрый шаг, мин за ночь
+      <select class="field" value={s.fastStep} onchange={(e) => (s.fastStep = Number(e.currentTarget.value))}>
+        {#each [60, 90, 120] as m (m)}<option value={m}>{m}</option>{/each}
+      </select>
+    </label>
+    <label
+      >Быстро — до
+      <input class="field num" type="time" bind:value={fastUntilText}
+        onchange={() => {
+          const m = parseClock(fastUntilText)
+          if (m != null) s.fastUntil = m < 12 * 60 ? m + 1440 : m
+        }} />
+    </label>
+  </div>
+  <div class="two">
+    <label
+      >Задержаться там, ночей
+      <input class="field num" type="number" inputmode="numeric" value={s.holdNights}
+        onchange={(e) => (s.holdNights = number(e.currentTarget.value, 1, 7, s.holdNights))} />
+    </label>
+    <label
+      >Потом шаг, мин за ночь
+      <select class="field" value={s.slowStep} onchange={(e) => (s.slowStep = Number(e.currentTarget.value))}>
+        {#each [15, 30, 60] as m (m)}<option value={m}>{m}</option>{/each}
+      </select>
+    </label>
+  </div>
+  <label
+    >Опоздание, которое не считается, мин
+    <input class="field num" type="number" inputmode="numeric" value={s.bedTolerance}
+      onchange={(e) => (s.bedTolerance = number(e.currentTarget.value, 0, 60, s.bedTolerance))} />
+  </label>
   <p class="hint">
-    План начался {shortDay(parseKey(s.planStart))} с {clockOf(s.startBed)}. Шаг {s.fastStep} мин до {clockOf(s.fastUntil)}, потом
-    {s.slowStep} мин.
+    План считается от того, когда ты реально лёг («Лёг»). Лёг позже плана — следующие ночи идут от этого времени: быстрым шагом до
+    {clockOf(s.fastUntil)}, там {s.holdNights} ноч., потом по {s.slowStep} мин до цели. Лёг раньше — план не ускоряется.
   </p>
+</div>
+
+<h2 class="section">Напоминания</h2>
+<div class="card form">
+  <label class="check"
+    ><input type="checkbox" bind:checked={s.doseNotify} />Уведомления о дозах: когда уже можно и когда давно пора</label>
+  <div class="two">
+    <label
+      >Дневная «давно пора» через, ч
+      <input class="field num" type="number" inputmode="numeric" value={s.doseLateMin / 60}
+        onchange={(e) => (s.doseLateMin = number(e.currentTarget.value, 1, 10, s.doseLateMin / 60) * 60)} />
+    </label>
+    <label
+      >После отбоя напоминать каждые, мин
+      <input class="field num" type="number" inputmode="numeric" value={s.bedNagMin}
+        onchange={(e) => (s.bedNagMin = number(e.currentTarget.value, 0, 120, s.bedNagMin))} />
+    </label>
+  </div>
+  <p class="hint">Раньше чем через 8 ч после прошлой дозы приложение о дозе не напоминает никогда. 0 мин — не напоминать после отбоя.</p>
 </div>
 
 <h2 class="section">Учёба</h2>
@@ -263,6 +317,21 @@
   label .field {
     color: var(--text);
     font-weight: 500;
+  }
+
+  label.check {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    color: var(--text);
+    line-height: 1.35;
+  }
+
+  label.check input {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    accent-color: var(--accent);
   }
 
   .two {
