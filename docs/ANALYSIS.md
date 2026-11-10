@@ -58,7 +58,7 @@ Defaults marked **(Q n)** wait for the user's answer in section 3. Don't build t
 | `plan.ts` | `bedMinutes(index)` (closed form) → walk forward night by night from `planStart`, using rules 5–6. `Night` gets `plannedBed` next to `bed` (effective); `nightDose`, `windDown`, `wake`, `cycleOf` follow the effective bed. |
 | `today.ts` | New `doseFloor(data)` and `nightDoseFrom()`. `dayDoseRule`, `doseWarning`, `pickAction`, the rows and the hero use them. New hero state "Night dose not before HH:MM". New `bedNight()`: a bedtime belongs to the night whose planned bedtime is nearest and still has no finished sleep (fixes the 3-h boundary bug). The "late" hero stops saying the wake-up is unchanged. |
 | `actions.ts` | `takeDose`: toast with the next "not before". `goToBed`: uses `bedNight()`; if the night dose is not logged and the floor has passed, asks "Night dose?" once. |
-| `schedule.ts` | Night-dose live phases start at `nightDoseFrom`. Wake series, wind-down and bedtime events come from the effective plan. Add a dose notification at "not before" **(Q 12)**. Last step `guardDoses()`: any event marked `dose` earlier than the floor is moved to the floor. |
+| `schedule.ts` | Night-dose live phases start at `nightDoseFrom`. Wake series, wind-down and bedtime events come from the effective plan. Add a dose notification at "not before" **(Q 14)**. Last step `guardDoses()`: any event marked `dose` earlier than the floor is moved to the floor. |
 | `db.svelte.ts`, `model.ts` | The derived plan also depends on `db.sleeps`; two settings. |
 | `Hero`, `Now`, `Doses`, `Sleep`, `Settings` | New texts; the plan list shows planned vs real and "00:00 on <date>"; settings for tolerance and step. |
 | Android | Nothing for the main flow. `BootReceiver`: on a time zone change, also post "Time zone changed, open the app". |
@@ -68,17 +68,17 @@ Defaults marked **(Q n)** wait for the user's answer in section 3. Don't build t
 | Case | Handling |
 |---|---|
 | Late day dose | The floor moves; night dose from = floor. Before the tap, once the deadline (bedtime − 1 h − 8 h) has passed, the button already says "night dose moves to HH:MM". |
-| Missed day dose | No log → the floor still comes from the last night dose, so the night dose stays on plan. The app does not decide whether a very late day dose should be skipped **(Q 10)**. |
-| Night dose not logged | The floor is unknown. Default: assume the planned time, as today, and ask once in the morning "taken at bedtime / not taken" **(Q 11)**. |
-| Night dose would land after bedtime | The dose is never moved earlier. Default: tonight's bedtime and wind-down are shown at the dose time (dose, then bed), and the hero says why **(Q 8)**. The real bedtime still comes from the button. |
-| Dose really taken inside 8 h | Suggesting is forbidden; logging the truth is not. Default: strong confirm, then log; the floor counts from it **(Q 9)**. |
+| Missed day dose | No log → the floor still comes from the last night dose, so the night dose stays on plan. The app does not decide whether a very late day dose should be skipped **(Q 12)**. |
+| Night dose not logged | The floor is unknown. Default: assume the planned time, as today, and ask once in the morning "taken at bedtime / not taken" **(Q 13)**. |
+| Night dose would land after bedtime | The dose is never moved earlier. Default: tonight's bedtime and wind-down are shown at the dose time (dose, then bed), and the hero says why **(Q 10)**. The real bedtime still comes from the button. |
+| Dose really taken inside 8 h | Suggesting is forbidden; logging the truth is not. Default: strong confirm, then log; the floor counts from it **(Q 11)**. |
 | Crossing midnight | Nights are keyed by the evening date and bedtimes are minutes after its midnight (may exceed 1440), so 23:00 dose / 00:00 bed is one night. The planned bed is clamped to ≥ 00:00. The floor uses epoch time and ignores dates. |
 | Undo | Removing the record recomputes everything (derived plan) and re-syncs Android within 0.4 s. Add "Not asleep" to the asleep hero for 30 min. Pressing "Went to bed" again later overwrites the bedtime (already so). |
 | Phone restart | Data is in `localStorage`; events are in `SharedPreferences` and `BootReceiver` re-arms them. The floor is already inside the event times, so it holds while the app is closed. |
 | Time zone / DST | The 8 h gap is elapsed time: always correct. Plan times are wall-clock and are recomputed at the next JS sync; until then native alarms keep the old absolute times, hence the notification above **(Q 16)**. |
 | Step back to 00:00 | Default: the existing 60 min per night down to 01:00, then 30 min. From 07:00 that is 8 nights. Dose times move with bedtime, ≤ 60 min per day **(Q 5)**. Up to 15 min late counts as on plan **(Q 7)**. An early night does not speed the plan up **(Q 6)**. |
 | «Поблажка» | Redundant once the real bedtime moves the plan. Default: remove it; show the cost instead ("+2 days to 00:00") **(Q 4)**. |
-| All-nighter, daytime sleep | `bedNight()` assigns it to the nearest planned night. Whether a 14:00 bedtime is "last night" or a nap is open **(Q 15)**. |
+| All-nighter, daytime sleep | `bedNight()` assigns it to the nearest planned night. Whether a 14:00 bedtime is "last night" or a nap is open **(Q 9)**. |
 | Mac | It has no data from the phone, so its plan-based wake time is wrong after any late night **(Q 3)**. |
 
 ### What would make it more adaptive
@@ -103,16 +103,16 @@ Answer by number. "Default" is what gets built if you say nothing.
 5. **Step back to 00:00.** a) 60 min per night down to 01:00, then 30 min (as now); b) 90; c) 120. Default: a.
 6. **Early night.** If you go to bed earlier than planned, should the plan speed up? Default: no, the next night follows the plan.
 7. **Tolerance.** How many minutes late still counts as "on plan"? Default: 15.
-14. **Wake-up after a late bedtime.** Real bedtime + 9 h, and on university days the "never late" cap still wins. OK? Is there a latest wake time on free days? Default: yes; no limit.
-15. **Daytime sleep.** If you go to bed at, say, 14:00 after a night without sleep: is it that night's (very late) bedtime, or a nap that doesn't touch the plan? Default: a bedtime.
+8. **Wake-up after a late bedtime.** Real bedtime + 9 h, and on university days the "never late" cap still wins. OK? Is there a latest wake time on free days? Default: yes; no limit.
+9. **Daytime sleep.** If you go to bed at, say, 14:00 after a night without sleep: is it that night's (very late) bedtime, or a nap that doesn't touch the plan? Default: a bedtime.
 
-**Doses** (the app follows your rules; check 8–10 with your doctor)
-8. **Night dose would land after bedtime** (the day dose was late). a) Bedtime waits for the dose: take it, then bed; b) bedtime = dose + 1 h; c) another rule. Default: a.
-9. **A dose really taken before 8 h passed.** Let you log it after a strong warning, or block the button? Default: warn, then log, because the log must be true.
-10. **Missed day dose.** Is there a time after which you skip it instead of taking it late? Default: no cut-off; the app only shows where the night dose moves to.
-11. **Night dose not logged.** In the morning, ask once "taken at bedtime / not taken"? Default: yes. Until you answer, the planned time is assumed.
-12. **Dose notifications.** Earlier you said "no reminders, the countdown is enough". Do you now want one notification when a dose becomes allowed? Default: yes, one, never before the 8 h mark.
-13. **"Took it earlier" buttons** (−5 / −15 / −30 / −60 min) right after logging. OK, although you asked for no manual time entry? Default: yes.
+**Doses** (the app follows your rules; check 10–12 with your doctor)
+10. **Night dose would land after bedtime** (the day dose was late). a) Bedtime waits for the dose: take it, then bed; b) bedtime = dose + 1 h; c) another rule. Default: a.
+11. **A dose really taken before 8 h passed.** Let you log it after a strong warning, or block the button? Default: warn, then log, because the log must be true.
+12. **Missed day dose.** Is there a time after which you skip it instead of taking it late? Default: no cut-off; the app only shows where the night dose moves to.
+13. **Night dose not logged.** In the morning, ask once "taken at bedtime / not taken"? Default: yes. Until you answer, the planned time is assumed.
+14. **Dose notifications.** Earlier you said "no reminders, the countdown is enough". Do you now want one notification when a dose becomes allowed? Default: yes, one, never before the 8 h mark.
+15. **"Took it earlier" buttons** (−5 / −15 / −30 / −60 min) right after logging. OK, although you asked for no manual time entry? Default: yes.
 
 **Other**
 16. **Time zones.** Do you travel across time zones with this phone? Default: no special handling, only a "Time zone changed, open the app" notification.
